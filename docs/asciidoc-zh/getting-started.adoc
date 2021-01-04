@@ -1,0 +1,191 @@
+[[getting-started]]
+= 入门
+
+本章节包含的内容对于你使用 `Reactor Netty` 有所帮助，包括以下部分：
+
+* <<getting-started-introducing-reactor-netty>>
+* <<prerequisites>>
+* <<getting-started-understanding-bom>>
+* <<getting>>
+
+[[getting-started-introducing-reactor-netty]]
+== 介绍Reactor Netty
+
+适用于微服务架构，`Reactor Netty` 为 `HTTP` (包括Websocket)，`TCP` 和 `UDP` 提供了支持背压的网络引擎。
+
+[[prerequisites]]
+== 前提
+
+`Reactor Netty` 运行在 `Java 8` 及以上。
+
+包含传递依赖：
+
+* Reactive Streams v1.0.3
+* Reactor Core v3.x
+* Netty v4.1.x
+
+[[getting-started-understanding-bom]]
+== 理解BOM和版本方案
+
+`Reactor Netty` 属于 `Project Reactor BOM` (自 `Aluminium` 发布开始)。
+尽管这些组件之间可能存在版本分歧，但这份精选的组件列表，提供相关的版本，使其在一起能够正常工作。
+
+NOTE: 在 0.9.x 和 1.0.x (Dysprosium和Europium) 之间，版本方案已经发生改变。
+
+组件遵循 `MAJOR.MINOR.PATCH-QUALIFIER` 的版本方案，而BOM遵循日历化版本 `YYYY.MINOR.PATCH-QUALIFIER`：
+
+ * `MAJOR` 是当前Reactor的版本，其中每个版本都会给项目结构带来根本性的改变。(这意味着可能需要花费很大的力气升级)
+ * `YYYY` 是指在某一发布周期内首次发布GA的年份(如1.0.x的1.0.0)
+ * `.MINOR` 从0开始，随着每个新的发布周期而递增
+ ** 就项目而言，它通常反映了更大范围的变化，但是升级的力度不是很大
+ ** 对BOM来说，它允许区分不同的发布周期，以防两个版本在同一年首次发布
+ * `.PATCH` 从0开始，随着每个新的发布周期而递增
+ * `-QUALIFIER` 是文本限定符，在GA版本中被省略掉(见下文)
+
+因此，遵循该约定的第一个发布周期是 `2020.0.x`，代号 `Europium`。
+该方案依次使用下面的限定符（注意分割线的使用）：
+
+ * `-M1`..`-M9`: 里程碑 (我们预计服务版本不会超过9个)
+ * `-RC1`..`-RC9`: 候选发布版本 (我们预计服务版本不会超过9个)
+ * `-SNAPSHOT`: 快照
+ * _没有限定符_ GA发布版本
+
+NOTE: 在上面的顺序中，快照会更频繁的出现。因为从概念上讲，它们总是指定修订的 "最新的预发布版本"。
+即使组件的第一个PATCH周期发布总是-SNAPSHOT，但随后会发布名称类似的快照，例如：里程碑或候选版本。
+
+每个发布周期也有一个代号，与之前基于代号的方案保持一致，可以用于非正式地引用 (例如讨论，博客文章等...)。
+代号表示传统上的MAJOR.MINOR数字. 它们 (绝大多数)来自 https://en.wikipedia.org/wiki/Periodic_table#Overview[元素周期表]，按字母顺序递增。
+
+NOTE: 直到Dysprosium为止，BOM都采用代号加限定符的方案进行版本发布，限定符有所不同.
+例如： Aluminium-RELEASE (第一次GA发布，现在应该是YYYY.0.0), Bismuth-M1, Californium-SR1 (更新版本现在应该是YYYY.0.1), Dysprosium-RC1, Dysprosium-BUILD-SNAPSHOT (每次打完补丁后，我们都会回到相同的快照版本。现在应该是YYYY.0.X-SNAPSHOT，所以我们每一个补丁都有一个快照。)
+
+[[getting]]
+== 入门Reactor Netty
+
+正如<<getting-started-understanding-bom,之前提到的>>, 使用 `Reactor Netty` 最简单的方式是在你的工程中使用 `BOM` 并添加相关的依赖。请注意，当你添加一个依赖时，你必须忽略版本，以便于从 `BOM` 中提取版本。
+
+但是，如果你想强制的使用一个特定版本的组件，你可以像平时一样在添加依赖时指定其版本。你也可以完全放弃 `BOM`，通过组件的版本指定其依赖。
+
+=== Maven上的使用
+
+`Maven` 天然支持 `BOM` 的概念。首先你需要通过添加下面的片段到你的 `pom.xml` 来导入 `BOM`。 如果父级（`dependencyManagement`）在你的pom中已经存在，仅需要添加内容。
+
+====
+[source,xml]
+----
+<dependencyManagement> <1>
+    <dependencies>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-bom</artifactId>
+            <version>Dysprosium-SR10</version> <2>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+<1> 注意 `dependencyManagement` 标签。这是在常规的 `dependencies` 部分之外的。
+<2> 截止本文档编写之时，`Dysprosium-SR10` 是 `BOM` 的最新版本。
+在 https://github.com/reactor/reactor/releases 查看最新情况。
+====
+
+接下来，像往常一样（除了没有 `<version>`），添加你的依赖到相关的reactor工程中，如下所示：
+
+====
+[source,xml]
+----
+<dependencies>
+    <dependency>
+        <groupId>io.projectreactor.netty</groupId>
+        <artifactId>reactor-netty-core</artifactId> <1>
+        <2>
+    </dependency>
+</dependencies>
+<dependencies>
+    <dependency>
+        <groupId>io.projectreactor.netty</groupId>
+        <artifactId>reactor-netty-http</artifactId>
+    </dependency>
+</dependencies>
+----
+<1> 依赖 `Reactor Netty`
+<2> 这里没有版本标签
+====
+
+=== Gradle上的使用
+
+从Gradle5开始支持 `BOM` 的概念。下面列表展示了如何导入 `BOM` 和添加 `Reactor Netty`：
+
+====
+[source,groovy]
+----
+dependencies {
+    // 导入BOM
+    implementation platform('io.projectreactor:reactor-bom:Dysprosium-SR10') <1>
+
+    // 无版本号定义依赖
+    implementation 'io.projectreactor.netty:reactor-netty-core' <2>
+    implementation 'io.projectreactor.netty:reactor-netty-http'
+}
+----
+<1> 截止本文档编写之时，`Dysprosium-SR10` 是 `BOM` 的最新版本。
+在 https://github.com/reactor/reactor/releases 查看最新情况。
+<2> 这里没有第三个 `:` 分隔的版本部分。从 `BOM` 中获取。
+====
+
+=== 里程碑和快照
+
+里程碑和开发者预览的版本是通过 `Spring Milestones` 仓库而不是 `Maven Central` 进行发布。请使用如下片段，要将其添加到你的构建配置文件中：
+
+====
+.Milestones in Maven
+[source,xml]
+----
+<repositories>
+	<repository>
+		<id>spring-milestones</id>
+		<name>Spring Milestones Repository</name>
+		<url>https://repo.spring.io/milestone</url>
+	</repository>
+</repositories>
+----
+====
+
+对于Gradle，请使用下面的片段：
+
+====
+.Milestones in Gradle
+[source,groovy]
+----
+repositories {
+  maven { url 'https://repo.spring.io/milestone' }
+  mavenCentral()
+}
+----
+====
+
+同样的，快照版本也是在一个单独的特定仓库中（Maven和Gradle一样）：
+
+====
+.-SNAPSHOTs in Maven
+[source,xml]
+----
+<repositories>
+	<repository>
+		<id>spring-snapshots</id>
+		<name>Spring Snapshot Repository</name>
+		<url>https://repo.spring.io/snapshot</url>
+	</repository>
+</repositories>
+----
+
+.-SNAPSHOTs in Gradle
+[source,groovy]
+----
+repositories {
+  maven { url 'https://repo.spring.io/snapshot' }
+  mavenCentral()
+}
+----
+====

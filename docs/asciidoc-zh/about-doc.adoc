@@ -1,0 +1,32 @@
+[[about-doc]]
+= 关于文档
+:linkattrs:
+
+本章节简要概述了Reactor参考文档，你不必依次阅读该文档，每个章节都是独立的，尽管它们常链接其它的章节。
+
+== 最新版本 & 版权声明
+
+Reactor参考文档也提供了HTML版本的，最新可用的副本在 https://projectreactor.io/docs/netty/release/reference/index.html
+
+无论是电子版还是纸质版的文档，只要你这些副本文档包含了版权声明，且不进行任何的收费，你都可以供自己使用或者分享给他人。
+
+== 贡献本文档
+本参考文档是用 https://asciidoctor.org/docs/asciidoc-writers-guide/[Asciidoc] 写的，其源码位于 https://github.com/reactor/reactor-netty/tree/master/docs/asciidoc。
+
+如果你有任何改进或建议，欢迎提交PR。
+
+我们建议你check out源码到本地，便于你运行gradle `asciidoctor` 任务进行文档的构建以及检查渲染效果。有些部分章节依赖于其包含的文件，因此GitHub的渲染并不总是完整的。
+
+ifeval::["{backend}" == "html5"]
+TIP: 为了便于文档编辑，大部分章节在末尾都有一个链接，可以打开一个直接编辑该章节源文件的GitHub界面。这些链接仅在HTML5版本的文档中提供，如下所示：
+link:https://github.com/reactor/reactor-netty/edit/master/docs/asciidoc/about-doc.adoc[Suggest Edit^, role="fa fa-edit"] to <<about-doc>>.
+endif::[]
+
+== 获取帮助
+使用 `Reactor Netty`，可以通过以下几种方式寻求帮助：
+
+* 在 https://gitter.im/reactor/reactor-netty[Gitter] 上与社区取得联系。
+* 在 stackoverflow.com https://stackoverflow.com/tags/reactor-netty[`reactor-netty`] 提问。
+* 在 `Github` issues上提交bug。仓库地址为：https://github.com/reactor/reactor-netty/issues[reactor-netty].
+
+NOTE: `Reactor Netty` 为开源项目，https://github.com/reactor/reactor-netty/tree/master/docs/asciidoc[包括此文档].

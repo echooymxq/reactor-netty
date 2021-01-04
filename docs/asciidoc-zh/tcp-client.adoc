@@ -1,0 +1,327 @@
+:sourcedir: ./../../reactor-netty-core/src/main/java
+:examplesdir: ./../../reactor-netty-examples/src/main/java/reactor/netty/examples/documentation/tcp/client
+:javadoc: https://projectreactor.io/docs/netty/release/api
+
+[[tcp-client]]
+= TCP Client
+
+Reactor Netty提供易使用和配置的
+{javadoc}/reactor/netty/tcp/TcpClient.html[`TcpClient`].
+它隐藏了创建 `TCP` 客户端所需的大部分 `Netty` 功能，并且增加了 `Reactive Streams` 背压。
+
+== 连接和断开
+
+要使用 `TCP` 客户端连接到给定的端点，你必须创建和配置一个
+{javadoc}/reactor/netty/tcp/TcpClient.html[`TcpClient`] 实例。
+默认情况下，`host` 为 `localhost`，`port` 为 `12012`。
+以下示例显示了如何创建一个 `TcpClient`：
+
+====
+[source,java,indent=0]
+.{examplesdir}/create/Application.java
+----
+include::{examplesdir}/create/Application.java[lines=18..31]
+----
+<1> 创建一个配置就绪的 {javadoc}/reactor/netty/tcp/TcpClient.html[`TcpClient`] 实例。
+<2> 以阻塞方式建立客户端连接，并等待其完成初始化。
+====
+
+返回的 {javadoc}/reactor/netty/Connection.html[`Connection`]
+提供一个简单的连接API，包括 {javadoc}/reactor/netty/DisposableChannel.html#disposeNow-java.time.Duration-[`disposeNow()`]，
+这将以阻塞的方式关闭客户端。
+
+=== Host和Port
+
+为了连接到特定到 `host` 和 `port`，你可以对 `TCP` 客户端使用以下配置。以下例子显示了如何做到：
+
+====
+[source,java,indent=0]
+.{examplesdir}/address/Application.java
+----
+include::{examplesdir}/address/Application.java[lines=18..33]
+----
+<1> 配置 `TCP` host
+<2> 配置 `TCP` port
+====
+
+== 写数据
+
+为了发送数据到指定端点，你必须连接一个I/O处理器。
+这个I/O处理器可以访问 {javadoc}/reactor/netty/NettyOutbound.html[`NettyOutbound`] 来写入数据。
+
+====
+[source,java,indent=0]
+.{examplesdir}/send/Application.java
+----
+include::{examplesdir}/send/Application.java[lines=18..35]
+----
+<1> 发送 `hello` 字符到端点。
+====
+
+== 消费数据
+
+为了从指定端点接收到数据，你必须连接一个I/O处理器。
+这个I/O处理器可以访问 {javadoc}/reactor/netty/NettyInbound.html[`NettyInbound`] 来读取数据。以下例子显示了如何做到：
+
+====
+[source,java,indent=0]
+.{examplesdir}/read/Application.java
+----
+include::{examplesdir}/read/Application.java[lines=18..34]
+----
+<1> 从指定端点接收数据
+====
+
+== 生命周期回调
+
+提供以下生命周期的回调，让你能够扩展 `TCP` 客户端。
+
+* `doOnConnect`: 当channel将要连接时被调用。
+* `doOnConnected`: 当channel连接后被调用。
+* `doOnDisconnected`: 当channel断开时被调用。
+
+以下示例使用 `doOnConnected` 回调：
+
+====
+[source,java,indent=0]
+.{examplesdir}/lifecycle/Application.java
+----
+include::{examplesdir}/lifecycle/Application.java[lines=18..37]
+----
+<1> 当channel连接后，使用 `ReadTimeoutHandler` 扩展 `Netty` 管道。
+====
+
+== TCP级的配置
+
+本节介绍了三种可以在TCP级使用的配置：
+
+* <<client-tcp-level-configurations-channel-options>>
+* <<client-tcp-level-configurations-event-wire-logger>>
+* <<client-tcp-level-configurations-event-loop-group>>
+
+[[client-tcp-level-configurations-channel-options]]
+=== 设置Channel选项
+
+默认情况下，`TCP` 客户端使用以下配置选项：
+
+====
+[source,java,indent=0]
+.{sourcedir}/reactor/netty/tcp/TcpClientConnect.java
+----
+include::{sourcedir}/reactor/netty/tcp/TcpClientConnect.java[lines=36..41]
+----
+====
+
+如果需要其他的选项或者更改当前选项，则可以使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/channeloptions/Application.java
+----
+include::{examplesdir}/channeloptions/Application.java[lines=18..35]
+----
+====
+
+你可以在下面的链接中找到更多关于 `Netty` channel选项：
+
+* https://netty.io/4.1/api/io/netty/channel/ChannelOption.html[`ChannelOption`]
+* https://docs.oracle.com/javase/8/docs/technotes/guides/net/socketOpt.html[Socket Options]
+
+[[client-tcp-level-configurations-event-wire-logger]]
+=== Wire Logger
+
+Reactor Netty提供了wire logging用于检测节点之间的流量。
+默认情况下，wire logging未启用。
+为了启用它，你必须设置 `reactor.netty.tcp.TcpClient` 日志级别为 `DEBUG` 且使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/wiretap/Application.java
+----
+include::{examplesdir}/wiretap/Application.java[lines=18..34]
+----
+<1> 启用wire logging
+====
+
+[[client-tcp-level-configurations-event-loop-group]]
+=== Event Loop Group
+
+默认情况下，`TCP` 客户端使用 "`Event Loop Group`"，其中工作线程数等于初始化时运行可用的处理器（最小值为4）数量。当你需要其他配置时，你可以使用 {javadoc}/reactor/netty/resources/LoopResources.html[LoopResource]`#create` 方法之一。
+
+`Event Loop Group` 的默认配置如下：
+
+====
+[source,java,indent=0]
+.{sourcedir}/reactor/netty/ReactorNetty.java
+----
+include::{sourcedir}/reactor/netty/ReactorNetty.java[lines=79..108]
+----
+====
+
+如果需要更改这些配置，则可使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/eventloop/Application.java
+----
+include::{examplesdir}/eventloop/Application.java[lines=18..37]
+----
+====
+
+== 连接池
+
+默认情况下，`TCP` 客户端使用一个最大channel数量为 `500` 和最大保存在代处理队列中注册请求数量为 `1000`（其余配置请查看下面的系统属性） 的 "`固定`" 连接池。
+这意味着，如果从池中请求不到channel，则将会创建新的channel。当达到池中的channel的最大数量时，新的获取channel请求将被延时直到某个channel归还到池中。
+
+====
+[source,java,indent=0]
+.{sourcedir}/reactor/netty/ReactorNetty.java
+----
+include::{sourcedir}/reactor/netty/ReactorNetty.java[lines=111..137]
+----
+====
+
+
+如果需要禁用连接池，则可以使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/pool/Application.java
+----
+include::{examplesdir}/pool/Application.java[lines=18..33]
+----
+====
+
+如果需要为连接池中的channel指定空闲超时时间，则可以使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/pool/config/Application.java
+----
+include::{examplesdir}/pool/config/Application.java[lines=18..42]
+----
+====
+
+NOTE: 当你期望高吞吐量时，请谨慎使用最大连接值非常高的连接池。你可能会遇到
+`reactor.netty.http.client.PrematureCloseException` 异常， 导致 "Connect Timeout" 的根本原因是打开/请求太多并发的连接。
+
+=== 指标
+池化的 `ConnectionProvider` 内置集成了 https://micrometer.io/[`Micrometer`]。
+它会暴露所有以 `reactor.netty.connection.provider` 开头的指标。
+
+include::conn-provider-metrics.adoc[]
+
+以下示例启用了该集成：
+
+====
+[source,java,indent=0]
+.{examplesdir}/pool/metrics/Application.java
+----
+include::{examplesdir}/pool/metrics/Application.java[lines=18..40]
+----
+<1> 启用与Micrometer的内置集成
+====
+
+== SSL和TLS
+
+当你需要SSL或TLS，你可以使用下面所示的配置：
+默认情况下，如果 `OpenSSL` 是可用的，
+https://netty.io/4.1/api/io/netty/handler/ssl/SslProvider.html#OPENSSL[`SslProvider.OPENSSL`]
+将会作为一个provider。否则会使用
+https://netty.io/4.1/api/io/netty/handler/ssl/SslProvider.html#JDK[`SslProvider.JDK`]。
+通过 https://netty.io/4.1/api/io/netty/handler/ssl/SslContextBuilder.html#sslProvider-io.netty.handler.ssl.SslProvider-[`SslContextBuilder`]
+或设置 `-Dio.netty.handler.ssl.noOpenSsl=true` 来切换provider。
+
+以下示例为使用 `SslContextBuilder`：
+
+====
+[source,java,indent=0]
+.{examplesdir}/security/Application.java
+----
+include::{examplesdir}/security/Application.java[lines=18..37]
+----
+====
+
+=== 服务名称指示
+默认情况下，`TCP` 客户端将远程host名称作为 `SNI` 服务名发送。
+当需要更改默认配置时，可以配置 `TCP` 客户端如下：
+
+====
+[source,java,indent=0]
+.{examplesdir}/sni/Application.java
+----
+include::{examplesdir}/sni/Application.java[lines=18..41]
+----
+====
+
+== 代理支持
+
+TCP客户端支持Netty提供的代理功能，并提供了通过 {javadoc}/reactor/netty/tcp/ProxyProvider.html[`ProxyProvider`] 指定 "`non proxy hosts`"。
+以下示例为使用 `ProxyProvider`：
+
+====
+[source,java,indent=0]
+.{examplesdir}/proxy/Application.java
+----
+include::{examplesdir}/proxy/Application.java[lines=18..38]
+----
+====
+
+== 指标
+TCP客户端内置集成了 https://micrometer.io/[`Micrometer`]。
+它会暴露所有以 `reactor.netty.tcp.client` 开头的指标。
+
+下表提供了TCP客户端指标的信息：
+
+[width="100%",options="header"]
+|=======
+| 指标名称 | 类型 | 描述
+| reactor.netty.tcp.client.data.received | DistributionSummary | 收到的数据量，以字节为单位
+| reactor.netty.tcp.client.data.sent | DistributionSummary | 发送的数据量，以字节为单位
+| reactor.netty.tcp.client.errors | Counter | 错误发生的数量
+| reactor.netty.tcp.client.tls.handshake.time | Timer | TLS握手花费的时间
+| reactor.netty.tcp.client.connect.time | Timer | 连接远程地址花费的时间
+| reactor.netty.tcp.client.address.resolver | Timer | 解析地址花费的时间
+|=======
+
+额外的其他指标：
+
+include::conn-provider-metrics.adoc[]
+
+include::alloc-metrics.adoc[]
+
+以下示例启用了该集成：
+
+====
+[source,java,indent=0]
+.{examplesdir}/metrics/Application.java
+----
+include::{examplesdir}/metrics/Application.java[lines=18..34]
+----
+<1> 启用与Micrometer的内置集成
+====
+
+当TCP客户端指标需要与 `Micrometer` 以外的系统集成或自己与 `Micrometer` 集成时，你可以提供自己的指标记录器，如下所示：
+
+====
+[source,java,indent=0]
+.{examplesdir}/metrics/custom/Application.java
+----
+include::{examplesdir}/metrics/custom/Application.java[lines=18..37]
+----
+<1> 启用TCP客户端指标并且提供 {javadoc}/reactor/netty/channel/ChannelMetricsRecorder.html[`ChannelMetricsRecorder`] 实现。
+====
+
+== 进程间通信（Unix Domain Sockets）
+`TCP` 客户端在使用本地传输时支持Unix Domain Sockets (UDS)。
+
+以下示例显示了如何使用UDS支持：
+
+====
+[source,java,indent=0]
+.{examplesdir}/uds/Application.java
+----
+include::{examplesdir}/uds/Application.java[lines=18..33]
+----
+<1> 指定要使用的 `DomainSocketAddress`
+====

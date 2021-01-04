@@ -1,0 +1,10 @@
+池化的 `ConnectionProvider` 指标
+
+[width="100%",options="header"]
+|=======
+| 指标名称 | 类别 | 描述
+| reactor.netty.connection.provider.total.connections | Gauge | 所有连接数，包括活跃或空闲
+| reactor.netty.connection.provider.active.connections | Gauge | 已成功请求并正在使用的连接数
+| reactor.netty.connection.provider.idle.connections | Gauge | 空闲连接的数量
+| reactor.netty.connection.provider.pending.connections | Gauge | 等待连接的请求数
+|=======

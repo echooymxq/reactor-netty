@@ -1,0 +1,15 @@
+`ByteBufAllocator` 指标
+
+[width="100%",options="header"]
+|=======
+| 指标名称 | 类别 | 描述
+| reactor.netty.bytebuf.allocator.used.heap.memory | Gauge | 堆内存的字节数
+| reactor.netty.bytebuf.allocator.used.direct.memory | Gauge | 直接内存的字节数
+| reactor.netty.bytebuf.allocator.used.heap.arenas | Gauge | 堆arena的数量 (当 `PooledByteBufAllocator` 时)
+| reactor.netty.bytebuf.allocator.used.direct.arenas | Gauge | 直接arena的数量 (当 `PooledByteBufAllocator` 时)
+| reactor.netty.bytebuf.allocator.used.threadlocal.caches | Gauge | 线程本地缓存的数量 (当 `PooledByteBufAllocator` 时)
+| reactor.netty.bytebuf.allocator.used.tiny.cache.size | Gauge | tiny缓存的大小 (当 `PooledByteBufAllocator` 时)
+| reactor.netty.bytebuf.allocator.used.small.cache.size | Gauge | small缓存的大小 (当 `PooledByteBufAllocator` 时)
+| reactor.netty.bytebuf.allocator.used.normal.cache.size | Gauge | normal缓存的大小 (当 `PooledByteBufAllocator` 时)
+| reactor.netty.bytebuf.allocator.used.chunk.size | Gauge | 一个arena块的大小 (当 `PooledByteBufAllocator` 时)
+|=======

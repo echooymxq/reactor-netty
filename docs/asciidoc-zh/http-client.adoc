@@ -1,0 +1,359 @@
+:sourcedir: ./../../reactor-netty-http/src/main/java
+:examplesdir: ./../../reactor-netty-examples/src/main/java/reactor/netty/examples/documentation/http/client
+:javadoc: https://projectreactor.io/docs/netty/release/api
+
+[[http-client]]
+= HTTP Client
+
+Reactor Netty 提供易使用和配置的
+{javadoc}/reactor/netty/http/client/HttpClient.html[`HttpClient`]。
+它隐藏了创建 `HTTP` 客户端所需的大部分 `Netty` 功能，并且增加了 `Reactive Streams` 背压。
+
+== 连接
+
+要使用 `HTTP` 客户端连接到给定的 `HTTP` 端点，必须创建和配置一个
+{javadoc}/reactor/netty/http/client/HttpClient.html[`HttpClient`] 实例。
+以下示例显示了如何做到这一点：
+
+====
+[source,java,indent=0]
+.{examplesdir}/connect/Application.java
+----
+include::{examplesdir}/connect/Application.java[lines=18..30]
+----
+<1> 创建一个配置就绪的 {javadoc}/reactor/netty/http/client/HttpClient.html[HttpClient] 实例。
+<2> 指定使用 `GET` 方法。
+<3> 指定路径。
+<4> 获取响应 {javadoc}/reactor/netty/http/client/HttpClientResponse.html[HttpClientResponse] 。
+====
+
+
+下面是使用 `WebSocket` 的例子：
+
+====
+[source,java,indent=0]
+.{examplesdir}/websocket/Application.java
+----
+include::{examplesdir}/websocket/Application.java[lines=18..42]
+----
+====
+
+=== Host和Port
+
+为了连接到特定的host和port，你可以对 `HTTP` 客户端使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/address/Application.java
+----
+include::{examplesdir}/address/Application.java[lines=18..33]
+----
+<1> 配置 `HTTP` host
+<2> 配置 `HTTP` port
+====
+
+== 写数据
+
+为了发送数据到指定 `HTTP` 端点，可以通过
+{javadoc}/reactor/netty/http/client/HttpClient.RequestSender.html#send-org.reactivestreams.Publisher-[`send(Publisher)`] 方法提供一个 `Publisher`。
+默认情况下，`Transfer-Encoding: chunked` 应用于那些期望请求体的 `HTTP` 方法。如有必要，通过请求头提供 `Content-Length` 禁用 `Transfer-Encoding: chunked`。下面的例子发送 `hello`：
+
+====
+[source,java,indent=0]
+.{examplesdir}/send/Application.java
+----
+include::{examplesdir}/send/Application.java[lines=18..33]
+----
+<1> 发送一个 `hello` 字符到给定的 `HTTP` 端点
+====
+
+=== 添加Header和其他元数据
+
+当发送数据到指定 `HTTP` 端点时，可能需要发送其他的headers，cookies， status code，和其他元数据。
+可以使用下面的配置做到这一点：
+
+====
+[source,java,indent=0]
+.{examplesdir}/send/headers/Application.java
+----
+include::{examplesdir}/send/headers/Application.java[lines=18..36]
+----
+<1> 禁用 `Transfer-Encoding: chunked` 并提供 `Content-Length` 头。
+====
+
+==== 压缩
+
+在 `HTTP` 客户端可以启用压缩，这意味着请求头中会加上 `Accept-Encoding`。以下示例显示了如何做到这一点：
+
+====
+[source,java,indent=0]
+.{examplesdir}/compression/Application.java
+----
+include::{examplesdir}/compression/Application.java[lines=18..32]
+----
+====
+
+==== 自动重定向支持
+
+可以配置 `HTTP` 客户端来启用支持自动重定向。
+
+Reactor Netty提供两种不同的支持自动重定向的策略：
+
+* `followRedirect(boolean)`: 指定状态 `301|302|307|308` 是否启用支持HTTP自动重定向。
+* `followRedirect(BiPredicate<HttpClientRequest, HttpClientResponse>)`: 如果提供的断言匹配，启用自动重定向支持。
+
+下面是使用 `followRedirect(true)` 的例子：
+
+====
+[source,java,indent=0]
+.{examplesdir}/redirect/Application.java
+----
+include::{examplesdir}/redirect/Application.java[lines=18..32]
+----
+====
+
+== 消费数据
+
+为了从指定 `HTTP` 端点接收数据，可以使用
+{javadoc}/reactor/netty/http/client/HttpClient.ResponseReceiver.html[`HttpClient.ResponseReceiver`] 中的方法之一。
+下面是使用 `responseContent` 方法的例子：
+
+====
+[source,java,indent=0]
+.{examplesdir}/read/Application.java
+----
+include::{examplesdir}/read/Application.java[lines=18..33]
+----
+<1> 接收数据从指定 `HTTP` 端点
+<2> 聚合数据
+<3> 转换数据为字符串
+====
+
+=== 读取Header和其他元数据
+
+当从指定 `HTTP` 端点接收数据时，可能会检查响应头，状态码和其他元数据。
+通过
+{javadoc}/reactor/netty/http/client/HttpClientResponse.html[`HttpClientResponse`] 可以获取额外的元数据。
+以下示例显示了如何做到这一点。
+
+====
+[source,java,indent=0]
+.{examplesdir}/read/status/Application.java
+----
+include::{examplesdir}/read/status/Application.java[lines=18..34]
+----
+<1> 获取状态码。
+====
+
+=== HTTP响应解码器
+
+默认情况下，`Netty` 为返回的响应配置了一些限制，例如：
+
+* 初始行的最大长度。
+* 所有header的最大长度。
+* content和每个chunk的最大长度。
+
+更多的信息看 https://netty.io/4.1/api/io/netty/handler/codec/http/HttpResponseDecoder.html[`HttpResponseDecoder`]
+
+默认情况下，`HTTP` 客户端使用以下配置：
+
+====
+[source,java,indent=0]
+.{sourcedir}/reactor/netty/http/HttpDecoderSpec.java
+----
+include::{sourcedir}/reactor/netty/http/HttpDecoderSpec.java[lines=29..33]
+----
+====
+====
+[source,java,indent=0]
+.{sourcedir}/reactor/netty/http/client/HttpResponseDecoderSpec.java
+----
+include::{sourcedir}/reactor/netty/http/client/HttpResponseDecoderSpec.java[lines=35..43]
+----
+====
+
+当需要改变这些默认配置时，可以配置 `HTTP` 客户端如下：
+
+====
+[source,java,indent=0]
+.{examplesdir}/responsedecoder/Application.java
+----
+include::{examplesdir}/responsedecoder/Application.java[lines=18..35]
+----
+<1> 所有的header的最大长度会是 `16384`。当超过这个值时，一个
+https://netty.io/4.1/api/io/netty/handler/codec/TooLongFrameException.html[TooLongFrameException]
+会抛出。
+====
+
+== TCP级配置
+
+当需要在TCP级配置时，可以使用以下片段来扩展默认的 `TCP` 客户端配置（添加选项，绑定地址等。）：
+
+====
+[source,java,indent=0]
+.{examplesdir}/channeloptions/Application.java
+----
+include::{examplesdir}/channeloptions/Application.java[lines=18..40]
+----
+====
+
+更多关于 `TCP` 级配置看 <<tcp-client>>。
+
+=== Wire Logger
+
+Reactor Netty提供了wire logging用于检测节点之间的流量。
+默认情况下，wire logging未启用。
+为了启用它，你必须设置 `reactor.netty.http.client.HttpClient` 日志级别为 `DEBUG` 且使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/wiretap/Application.java
+----
+include::{examplesdir}/wiretap/Application.java[lines=18..32]
+----
+<1> 启用wire logging
+====
+
+== SSL和TLS
+当你需要SSL或TLS，你可以使用下面例子所示的配置：
+默认情况下，如果 `OpenSSL` 是可用的，
+https://netty.io/4.1/api/io/netty/handler/ssl/SslProvider.html#OPENSSL[`SslProvider.OPENSSL`]
+将作为provider. 否则会使用
+https://netty.io/4.1/api/io/netty/handler/ssl/SslProvider.html#JDK[SslProvider.JDK]。
+通过
+https://netty.io/4.1/api/io/netty/handler/ssl/SslContextBuilder.html#sslProvider-io.netty.handler.ssl.SslProvider-[`SslContextBuilder`]
+或设置 `-Dio.netty.handler.ssl.noOpenSsl=true` 来切换provider。
+以下示例使用 `SslContextBuilder`：
+
+====
+[source,java,indent=0]
+.{examplesdir}/security/Application.java
+----
+include::{examplesdir}/security/Application.java[lines=18..35]
+----
+====
+
+=== 服务名称指示
+默认情况下，`HTTP` 客户端将远程host名称作为 `SNI` 服务名称发送。
+当需要改变此默认设置时，可以配置 `HTTP` 客户端如下：
+
+====
+[source,java,indent=0]
+.{examplesdir}/sni/Application.java
+----
+include::{examplesdir}/sni/Application.java[lines=18..39]
+----
+====
+
+== 重试策略
+默认情况下，如果请求在 `TCP` 层被中止，`HTTP` 客户端会重试一次。
+
+== HTTP/2
+
+默认情况下，`HTTP` 客户端支持 `HTTP/1.1`。如果需要，则可以配置为 `HTTP/2`。
+除了协议配置，如果需要 `H2` 而不是 `H2C (明文)`，则必须配置SSL。
+
+NOTE: 由于JDK8（尽管一些厂商将ALPN移植到了JDK8）不支持 "`开箱即用`" 的应用层协议协商(ALPN)，你额外需要一个支持它的本地
+-- 例如， https://netty.io/wiki/forked-tomcat-native.html[`netty-tcnative-boringssl-static`]。
+
+下面列出一个简单的 `H2` 例子：
+
+====
+[source,java,indent=0]
+.{examplesdir}/http2/H2Application.java
+----
+include::{examplesdir}/http2/H2Application.java[lines=18..42]
+----
+<1> 配置客户端只支持 `HTTP/2`
+<2> 配置 `SSL`
+====
+
+下面列出一个简单的 `H2C` 例子：
+
+====
+[source,java,indent=0]
+.{examplesdir}/http2/H2CApplication.java
+----
+include::{examplesdir}/http2/H2CApplication.java[lines=18..41]
+----
+====
+
+=== 协议选择
+
+====
+[source,java,indent=0]
+.{sourcedir}/reactor/netty/http/HttpProtocol.java
+----
+include::{sourcedir}/reactor/netty/http/HttpProtocol.java[lines=24..52]
+----
+====
+
+== 指标
+HTTP客户端内置集成了 https://micrometer.io/[`Micrometer`]。
+它会暴露所有以 `reactor.netty.http.client` 开头的指标。
+
+下表提供了HTTP客户端指标的信息：The following table provides information for the HTTP client metrics:
+
+[width="100%",options="header"]
+|=======
+| 指标名称 | 类别 | 描述
+| reactor.netty.http.client.data.received | DistributionSummary | 接收到的数据量，以字节为单位
+| reactor.netty.http.client.data.sent | DistributionSummary | 发送的数据量，以字节为单位
+| reactor.netty.http.client.errors | Counter | 错误发生的数量
+| reactor.netty.http.client.tls.handshake.time | Timer | TLS握手花费的时间
+| reactor.netty.http.client.connect.time | Timer | 连接到远程地址花费的时间
+| reactor.netty.http.client.address.resolver | Timer | 解析地址花费的时间
+| reactor.netty.http.client.data.received.time | Timer | 消费收到的数据花费的时间
+| reactor.netty.http.client.data.sent.time | Timer | 发送数据花费的时间
+| reactor.netty.http.client.response.time | Timer | 请求/响应的总时间
+|=======
+
+额外的其他指标：
+
+include::conn-provider-metrics.adoc[]
+
+include::alloc-metrics.adoc[]
+
+以下示例启用了该集成：
+
+====
+[source,java,indent=0]
+.{examplesdir}/metrics/Application.java
+----
+include::{examplesdir}/metrics/Application.java[lines=18..51]
+----
+<1> 对带有 `URL` 标签的计量器设置上限
+<2> 如果可能，模版URL将作为URL标签值
+<3> 启用内置集成的Micrometer
+====
+
+NOTE: 为了避免启用metric导致内存和CPU负荷增加，尽可能将真实的URL转换为模版URL。
+如果不转换为模版的形式，每个不同的URL都会创建一个不同的标签，metric将会占用大量的内存。
+
+NOTE: 总是为URL标签计量器设置上限，在无法将真实的URL进行模版化的时候，配置计量器的上限通常会有所作用。
+查看更多信息 https://micrometer.io/docs/concepts#_denyaccept_meters[`maximumAllowableTags`]。
+
+当HTTP客户端指标需要与 `Micrometer` 以外的系统集成或自己与 `Micrometer` 的集成时，你可以提供自己的指标记录器，如下所示：
+
+====
+[source,java,indent=0]
+.{examplesdir}/metrics/custom/Application.java
+----
+include::{examplesdir}/metrics/custom/Application.java[lines=18..35]
+----
+<1> 启用HTTP客户端指标并且提供 {javadoc}/reactor/netty/http/client/HttpClientMetricsRecorder.html[`HttpClientMetricsRecorder`] 实现。
+====
+
+== 进程间通信（Unix Domain Sockets）
+`HTTP` 客户端在使用本地传输时支持Unix Domain Sockets (UDS)。
+
+以下示例显示了如何使用UDS支持：
+
+====
+[source,java,indent=0]
+.{examplesdir}/uds/Application.java
+----
+include::{examplesdir}/uds/Application.java[lines=18..33]
+----
+<1> 指定要使用的 `DomainSocketAddress`
+====

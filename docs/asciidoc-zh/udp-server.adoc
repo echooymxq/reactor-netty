@@ -1,0 +1,210 @@
+:sourcedir: ./../../reactor-netty-core/src/main/java
+:examplesdir: ./../../reactor-netty-examples/src/main/java/reactor/netty/examples/documentation/udp/server
+:javadoc: https://projectreactor.io/docs/netty/release/api
+
+[[udp-server]]
+= UDP Server
+
+Reactor Netty 提供易使用和配置的
+{javadoc}/reactor/netty/udp/UdpServer.html[`UdpServer`]。
+它隐藏了创建 `UDP` 服务所需的大部分 `Netty` 功能，并且增加了 `Reactive Streams` 背压。
+
+== 启动和停止
+
+为了启动一个UDP服务，必须创建和配置一个 {javadoc}/reactor/netty/udp/UdpServer.html[UdpServer] 实例。
+默认情况下，host配置为 `localhost`，port为 `12012`。
+以下示例显示如何创建和启动一个UDP服务：
+
+====
+[source,java,indent=0]
+.{examplesdir}/create/Application.java
+----
+include::{examplesdir}/create/Application.java[lines=18..32]
+----
+<1> 创建一个配置就绪的 {javadoc}/reactor/netty/udp/UdpServer.html[`UdpServer`] 实例。
+<2> 以阻塞方式启动服务，并等待其完成初始化。
+====
+
+返回的 {javadoc}/reactor/netty/Connection.html[`Connection`]
+提供一个简单的服务API，包括 {javadoc}/reactor/netty/DisposableChannel.html#disposeNow-java.time.Duration-[`disposeNow()`]，
+这将以阻塞的方式关闭服务。
+
+=== Host和Port
+
+要在特定的host和port上服务，可以应用以下配置到 `UDP` 服务中：
+
+====
+[source,java,indent=0]
+.{examplesdir}/address/Application.java
+----
+include::{examplesdir}/address/Application.java[lines=18..34]
+----
+<1> 配置 `UDP` 服务 host
+<2> 配置 `UDP` 服务 port
+====
+
+== 写数据
+
+为了发送数据到远程节点，必须连接一个I/O处理器。
+这个I/O可以访问 {javadoc}/reactor/netty/udp/UdpOutbound.html[`UdpOutbound`] 来写入数据。
+以下示例显示了如何发送 `hello`：
+
+====
+[source,java,indent=0]
+.{examplesdir}/send/Application.java
+----
+include::{examplesdir}/send/Application.java[lines=18..51]
+----
+<1> 发送一个 `hello` 字符到远程节点
+====
+
+== 消费数据
+
+为了从远程节点接收数据，必须连接一个I/O处理器。
+这个I/O处理器可以访问 {javadoc}/reactor/netty/udp/UdpInbound.html[`UdpInbound`] 来读取数据。
+以下示例显示如何消费数据：
+
+====
+[source,java,indent=0]
+.{examplesdir}/read/Application.java
+----
+include::{examplesdir}/read/Application.java[lines=18..47]
+----
+<1> 从远程节点接收数据
+====
+
+== 生命周期回调
+
+提供下列生命周期回调让你能够扩展 `UDP` 服务：
+
+* `doOnBind`: 当服务channel将要绑定时被调用。
+* `doOnBound`: 当服务channel绑定后被调用。
+* `doOnUnbound`: 当服务channel解除绑定后被调用。
+
+以下例子使用 `doOnBound` 方法：
+
+====
+[source,java,indent=0]
+.{examplesdir}/lifecycle/Application.java
+----
+include::{examplesdir}/lifecycle/Application.java[lines=18..34]
+----
+<1> 当服务channel绑定后，使用 `LineBasedFrameDecoder` 扩展 `Netty` 管道。
+====
+
+== 连接配置
+
+本节描述三类可以用在UDP层的配置：
+
+* <<server-udp-connection-configurations-channel-options>>
+* <<server-udp-connection-configurations-wire-logger>>
+* <<server-udp-connection-configurations-event-loop-group>>
+
+[[server-udp-connection-configurations-channel-options]]
+=== Channel选项
+
+默认情况下，`UDP` 服务使用以下配置选项：
+
+====
+[source,java,indent=0]
+.{sourcedir}/reactor/netty/udp/UdpServerBind.java
+----
+include::{sourcedir}/reactor/netty/udp/UdpServerBind.java[lines=40..44]
+----
+====
+
+如果需要额外的选项或修改当前选项，则可以使用下列配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/channeloptions/Application.java
+----
+include::{examplesdir}/channeloptions/Application.java[lines=18..34]
+----
+====
+
+你可以在下面的链接中找到更多关于 `Netty` channel选项：
+
+* https://netty.io/4.1/api/io/netty/channel/ChannelOption.html[`ChannelOption`]
+* https://docs.oracle.com/javase/8/docs/technotes/guides/net/socketOpt.html[Socket Options]
+
+[[server-udp-connection-configurations-wire-logger]]
+=== Wire Logger
+
+Reactor Netty提供了wire logging用于检测节点之间的流量。
+默认情况下，wire logging未启用。
+为了启用它，你必须设置 `reactor.netty.udp.UdpServer` 日志级别为 `DEBUG` 且使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/wiretap/Application.java
+----
+include::{examplesdir}/wiretap/Application.java[lines=18..33]
+----
+<1> 启用wire logging
+====
+
+[[server-udp-connection-configurations-event-loop-group]]
+=== Event Loop Group
+
+默认情况下，`TCP` 服务使用 "`Event Loop Group`" ，其中工作线程数等于初始化时运行可用的处理器（最小值为4）数量。当你需要其他配置时，你可以使用 {javadoc}/reactor/netty/resources/LoopResources.html[LoopResource]`#create` 方法之一。
+
+“`Event Loop Group`” 的默认配置如下：
+
+====
+[source,java,indent=0]
+.{sourcedir}/reactor/netty/ReactorNetty.java
+----
+include::{sourcedir}/reactor/netty/ReactorNetty.java[lines=79..108]
+----
+====
+
+如果需要更改这些配置，则可使用以下配置：
+
+====
+[source,java,indent=0]
+.{examplesdir}/eventloop/Application.java
+----
+include::{examplesdir}/eventloop/Application.java[lines=18..36]
+----
+====
+
+== 指标
+UDP服务内置集成了 https://micrometer.io/[`Micrometer`]。
+它会暴露所有以 `reactor.netty.udp.server` 开头的指标。
+
+下表提供了UDP服务指标的信息：
+
+[width="100%",options="header"]
+|=======
+| 指标名称 | 类别 | 描述
+| reactor.netty.udp.server.data.received | DistributionSummary | 接收的数据量，以字节为单位
+| reactor.netty.udp.server.data.sent | DistributionSummary | 发送的数据量，以字节为单位
+| reactor.netty.udp.server.errors | Counter | 错误发生的数量
+|=======
+
+额外的其他指标：
+
+include::alloc-metrics.adoc[]
+
+以下示例启用了该集成：
+
+====
+[source,java,indent=0]
+.{examplesdir}/metrics/Application.java
+----
+include::{examplesdir}/metrics/Application.java[lines=18..34]
+----
+<1> 启用内置集成的Micrometer
+====
+
+当UDP服务指标需要与 `Micrometer` 以外的系统集成或自己与 `Micrometer` 集成时，你可以提供自己的指标记录器，如下所示：
+
+====
+[source,java,indent=0]
+.{examplesdir}/metrics/custom/Application.java
+----
+include::{examplesdir}/metrics/custom/Application.java[lines=18..35]
+----
+<1> 启用UDP服务指标并且提供 {javadoc}/reactor/netty/channel/ChannelMetricsRecorder.html[`ChannelMetricsRecorder`] 实现。
+====
